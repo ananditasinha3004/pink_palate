@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#e90074">
+  <title>Pink Plate — Mess tracker</title>
+  <link rel="stylesheet" href="styles.css?v=6">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#residents" aria-label="Pink Plate home"><span class="brand-mark">P</span><span>pink plate<small>MESS MANAGER</small></span></a>
+      <div class="side-label">WORKSPACE</div>
+      <nav class="nav" aria-label="Main navigation">
+        <button class="nav-link active" data-page="dashboard"><span class="nav-icon">⌂</span>Dashboard<span class="nav-arrow">›</span></button>
+        <button class="nav-link" data-page="residents"><span class="nav-icon">♙</span>Residents<span class="nav-arrow">›</span></button>
+        <button class="nav-link" data-page="daily"><span class="nav-icon">▦</span>Daily meals<span class="nav-arrow">›</span></button>
+        <button class="nav-link" data-page="monthly"><span class="nav-icon">▤</span>Monthly overview<span class="nav-arrow">›</span></button>
+        <button class="nav-link" data-page="finance"><span class="nav-icon">＄</span>Payments & expenses<span class="nav-arrow">›</span></button>
+      </nav>
+      <div class="side-bottom"><span class="status-dot"></span> Saved on this device <small>Your records stay in this browser</small></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div class="mobile-brand"><span class="brand-mark">P</span> pink plate</div><div class="month-picker"><label for="monthSelect">TRACKING MONTH</label><input id="monthSelect" type="month"></div></header>
+      <section id="page-dashboard" class="page active"></section>
+      <section id="page-residents" class="page"></section>
+      <section id="page-daily" class="page"></section>
+      <section id="page-monthly" class="page"></section>
+      <section id="page-finance" class="page"></section>
+      <footer>Pink Plate <span>·</span> Made for the everyday magic of running a mess.</footer>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status"></div>
+  <dialog id="residentDialog" class="dialog" aria-labelledby="residentDialogTitle">
+    <form id="residentForm">
+      <p class="eyebrow">YOUR HOUSEHOLD</p>
+      <h2 id="residentDialogTitle">Add a resident</h2>
+      <p class="dialog-copy">Use their full registered name. Poll matching also checks saved aliases.</p>
+      <div class="field"><label for="residentName">FULL RESIDENT NAME</label><input id="residentName" name="name" maxlength="80" autocomplete="off" required></div>
+      <div class="field"><label for="residentAliases">POLL NAME ALIASES</label><input id="residentAliases" name="aliases" maxlength="240" autocomplete="off" placeholder="e.g. Ani, A. Sinha"><small>Separate aliases with commas.</small></div>
+      <div id="residentFormError" class="form-error" role="alert"></div>
+      <div class="dialog-actions"><button type="button" class="btn btn-secondary" id="cancelResident">Cancel</button><button type="submit" class="btn btn-primary">Save resident</button></div>
+    </form>
+  </dialog>
+  <dialog id="batchDialog" class="dialog batch-dialog" aria-labelledby="batchDialogTitle">
+    <div class="batch-modal">
+      <header class="batch-modal-head"><div><p class="eyebrow">WHATSAPP POLL REVIEW</p><h2 id="batchDialogTitle">Review extracted voters</h2></div><div class="batch-head-actions"><button type="button" class="btn btn-secondary btn-small" id="processPolls" disabled>Read all screenshots</button><button type="button" class="btn btn-secondary btn-small" id="clearPolls" disabled>Clear batch</button><button type="button" class="voter-icon batch-close" data-close-batch aria-label="Close poll review">✕</button></div></header>
+      <div id="batchReview" class="batch-dialog-scroll"></div>
+      <footer class="batch-modal-foot"><span id="batchModalStatus" class="detail-line"></span><button class="btn btn-primary" id="applyBatch">Apply reviewed polls</button></footer>
+    </div>
+  </dialog>
+  <dialog id="voterDialog" class="dialog voter-dialog" aria-labelledby="voterDialogTitle">
+    <form id="voterForm">
+      <p class="eyebrow">POLL REVIEW</p>
+      <h2 id="voterDialogTitle">Review extracted voter</h2>
+      <p class="dialog-copy">Correct the OCR name and confirm a resident match, mark UNKNOWN, or retain this as non-voter text.</p>
+      <div class="field"><label for="voterName">EXTRACTED NAME</label><input id="voterName" maxlength="100" autocomplete="off" required></div>
+      <div id="voterSuggestions" class="suggestion-buttons"></div>
+      <div class="field"><label for="voterResident">MATCH RESIDENT</label><select id="voterResident"><option value="">Choose a resident</option></select></div>
+      <div class="field"><label for="voterStatus">REVIEW STATUS</label><select id="voterStatus"><option value="pending">Needs review</option><option value="matched">Matched resident — confirm</option><option value="unknown">UNKNOWN voter</option><option value="ignored">Not a voter — retain text</option></select></div>
+      <div id="voterFormError" class="form-error" role="alert"></div>
+      <div class="dialog-actions voter-dialog-actions"><button type="button" class="btn btn-secondary" id="addVoterAsResident">＋ Add as resident</button><button type="button" class="btn btn-secondary" id="cancelVoter">Cancel</button><button type="submit" class="btn btn-primary">Save review</button></div>
+    </form>
+  </dialog>
+  <script src="app.js?v=6"></script>
+</body>
+</html>
