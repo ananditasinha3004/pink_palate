@@ -31,3 +31,13 @@
 .poll-review-results>.callout{align-self:start}
 .poll-review-results .voter-name{max-width:min(270px,26vw)}
 @media(max-width:760px){.poll-review-layout{grid-template-columns:1fr;grid-template-rows:minmax(140px,28vh) minmax(0,1fr);gap:8px}.poll-image-title{padding:5px 8px}.poll-image-viewport{padding:5px}.poll-image-viewport img{width:auto;max-width:100%;height:auto}.poll-review-results .voter-name{max-width:40vw}}
+/* Manual OCR crop selection in Debug Crops. */
+.debug-crops figure .btn{margin-top:7px;width:100%;justify-content:center}
+.crop-dialog{width:min(980px,calc(100vw - 24px));max-height:90vh;padding:0;border:1px solid var(--line);border-radius:14px;overflow:auto}
+.crop-dialog-content{padding:18px;display:grid;gap:10px}
+.crop-dialog-content h2{margin:0;font:700 20px 'Playfair Display',serif}
+.crop-dialog-content p{margin:0;color:var(--muted);font-size:12px}
+.crop-stage{position:relative;width:fit-content;max-width:100%;margin:auto;cursor:crosshair;touch-action:none;user-select:none}
+.crop-stage img{display:block;max-width:100%;max-height:60vh;pointer-events:none}
+.crop-selection{position:absolute;border:2px solid var(--pink-dark);background:rgba(238,77,144,.18);pointer-events:none;box-sizing:border-box}
+.crop-dialog .dialog-actions{margin:0;justify-content:flex-end}

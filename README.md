@@ -32,7 +32,7 @@ Opening `index.html` directly may not work consistently because the app uses bro
 
 1. Open **Daily meals** and choose the poll screenshot file or drag it into the upload area.
 2. Set or confirm the date and meal for each screenshot.
-3. Start OCR. Clear, unique matches to registered residents are counted automatically; review only new, ambiguous, or low-confidence names before applying.
+3. Start OCR. Clear, unique matches to registered residents are counted automatically; review only new, ambiguous, or low-confidence names before applying. In Debug Crops, use **Adjust crop** to drag around a voter name in the uploaded screenshot and re-read that row.
 4. Mark unmatched voters as unknown or explicitly mark non-voter text. Unknown entries are retained for review and are not included in resident meal totals.
 5. If a record already exists for the same date and meal, select the replace option only if you intend to replace it.
 

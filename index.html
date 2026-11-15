@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#e90074">
   <title>Pink Plate — Mess tracker</title>
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=12">
 </head>
 <body>
   <div class="app-shell">
@@ -50,6 +50,15 @@
       <footer class="batch-modal-foot"><span id="batchModalStatus" class="detail-line"></span><button class="btn btn-primary" id="applyBatch">Apply reviewed polls</button></footer>
     </div>
   </dialog>
+  <dialog id="cropDialog" class="dialog crop-dialog" aria-labelledby="cropDialogTitle">
+    <div class="crop-dialog-content">
+      <h2 id="cropDialogTitle">Adjust OCR crop</h2>
+      <p>Drag over the voter name in the uploaded screenshot. Keep the avatar and vote time outside the selection.</p>
+      <div id="cropStage" class="crop-stage"><img id="cropImage" alt="Uploaded poll for manual cropping"><div id="cropSelection" class="crop-selection" hidden></div></div>
+      <div id="cropError" class="form-error" role="alert"></div>
+      <div class="dialog-actions"><button type="button" class="btn btn-secondary" id="cancelCrop">Cancel</button><button type="button" class="btn btn-primary" id="readCrop" disabled>Re-read selected name</button></div>
+    </div>
+  </dialog>
   <dialog id="voterDialog" class="dialog voter-dialog" aria-labelledby="voterDialogTitle">
     <form id="voterForm">
       <p class="eyebrow">POLL REVIEW</p>
@@ -63,6 +72,6 @@
       <div class="dialog-actions voter-dialog-actions"><button type="button" class="btn btn-secondary" id="addVoterAsResident">＋ Add as resident</button><button type="button" class="btn btn-secondary" id="cancelVoter">Cancel</button><button type="submit" class="btn btn-primary">Save review</button></div>
     </form>
   </dialog>
-  <script src="app.js?v=11"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>
