@@ -1,4 +1,4 @@
 .DS_Store
 *.log
-eng.traineddata
+/eng.traineddata
 pink-plate-backup-*.json

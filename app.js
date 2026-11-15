@@ -228,16 +228,16 @@ function bindBatchReview(){
 }
 function updateApplyButton(){const btn=$('#applyBatch');if(!btn)return;const keys=batchItems.map(i=>mealKey(i.date,i.meal)),duplicateBatch=new Set(keys).size!==keys.length;btn.disabled=duplicateBatch||batchItems.some(i=>!i.date||!i.meal||i.status!=='read'||!(i.lines.length||i.deletedLines?.length)||i.lines.some(l=>!l.reviewed||!['matched','unknown','ignored'].includes(l.state))||(store.meals[mealKey(i.date,i.meal)]&&!i.replaceExisting));}
 function renderBatchArea(){const area=$('#batchReview');if(area){area.innerHTML=renderBatchMarkup();bindBatchReview();$('#processPolls').disabled=!batchItems.length;$('#clearPolls').disabled=!batchItems.length;const message=batchItems.length?`${batchItems.length} screenshot${batchItems.length===1?'':'s'} in this review batch.`:'';$('#batchStatus').textContent=message;$('#batchModalStatus').textContent=message;updateApplyButton();if(batchItems.length&&!$('#batchDialog').open)$('#batchDialog').showModal();if(!batchItems.length&&$('#batchDialog').open)$('#batchDialog').close()}}
-async function ensureOcr(){if(window.Tesseract)return;await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=resolve;s.onerror=reject;document.head.append(s)})}
+async function ensureOcr(){if(window.Tesseract)return;await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=new URL('vendor/tesseract/tesseract.min.js',document.baseURI).href;s.onload=()=>window.Tesseract?resolve():reject(new Error('Tesseract script loaded without an OCR engine'));s.onerror=()=>reject(new Error(`Could not load local OCR script: ${s.src}`));document.head.append(s)})}
 async function loadPollImage(file){
  const bitmap=await createImageBitmap(file),canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(bitmap,0,0);const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);bitmap.close?.();return {canvas,imageData};
 }
 async function processBatch(){
  if(!batchItems.length)return;$('#batchStatus').textContent='Loading OCR engine…';$('#processPolls').disabled=true;
- let worker;
- try{if(!$('#batchDialog').open)$('#batchDialog').showModal();await ensureOcr();worker=await Tesseract.createWorker('eng',1,{logger:m=>{if(m.status==='recognizing text'){const status=`Reading ${m.progress?Math.round(m.progress*100):0}%`;$('#batchStatus').textContent=status;$('#batchModalStatus').textContent=status}}});
+ let worker,ocrStage='loading the OCR engine';
+ try{if(!$('#batchDialog').open)$('#batchDialog').showModal();await ensureOcr();const ocrBase=new URL('vendor/tesseract/',document.baseURI).href.replace(/\/$/,'');ocrStage='starting the OCR worker';worker=await Tesseract.createWorker('eng',1,{workerPath:`${ocrBase}/worker.min.js`,corePath:`${ocrBase}/core`,langPath:`${ocrBase}/lang`,gzip:false,workerBlobURL:false,logger:m=>{if(m.status==='recognizing text'){const status=`Reading ${m.progress?Math.round(m.progress*100):0}%`;$('#batchStatus').textContent=status;$('#batchModalStatus').textContent=status}}});
   for(const item of batchItems){if(item.status==='read')continue;item.status='reading';renderBatchArea();
-   await worker.setParameters({tessedit_pageseg_mode:'3'});const full=await worker.recognize(item.file);item.fullCropRawText=full.data.text||'';
+   ocrStage=`reading ${item.fileName}`;await worker.setParameters({tessedit_pageseg_mode:'3'});const full=await worker.recognize(item.file);item.fullCropRawText=full.data.text||'';
    const {canvas,imageData}=await loadPollImage(item.file),detected=detectVoteRows(imageData),x1=Math.min(canvas.width,Math.floor(canvas.width*.74));item.voterRegion=detected.region;item.debugCrops=[];item.lines=[];
    const inferredMeal=inferMealFromHeading(item.fullCropRawText);item.mealHeading=inferredMeal.heading;
    if(inferredMeal.meal)item.meal=inferredMeal.meal;
@@ -246,16 +246,16 @@ async function processBatch(){
    if(!rowSpecs.length){const fallback=(full.data.text||'').split(/\r?\n/).map(text=>text.trim()).filter(Boolean);rowSpecs=fallback.map((text,i)=>({top:Math.floor(canvas.height*i/fallback.length),bottom:Math.floor(canvas.height*(i+1)/fallback.length),height:Math.max(1,Math.floor(canvas.height/fallback.length)),fallbackText:text}))}
    await worker.setParameters({tessedit_pageseg_mode:'7'});
    for(let index=0;index<rowSpecs.length;index++){
-    const row=rowSpecs[index];let rawText='',confidence=0,cropUrl='';
+    const row=rowSpecs[index],leftPadding=Math.max(8,Math.round(row.height*.1)),x0=Math.max(0,Math.floor(canvas.width*.1)-leftPadding);let rawText='',confidence=0,cropUrl='';
     if(row.fallbackText){rawText=row.fallbackText;confidence=0}
-    else{const leftPadding=Math.max(8,Math.round(row.height*.1)),x0=Math.max(0,Math.floor(canvas.width*.1)-leftPadding),verticalInset=Math.round(row.height*.12),box={x0,y0:Math.floor(row.top+verticalInset),x1,y1:Math.ceil(row.bottom-verticalInset)},crop=preprocessNameCrop(imageData,box),result=await worker.recognize(crop);rawText=String(result.data.text||'').trim();confidence=Number(result.data.confidence)||0;try{cropUrl=crop.toDataURL('image/jpeg',.78)}catch{}}
+    else{const verticalInset=Math.round(row.height*.12),box={x0,y0:Math.floor(row.top+verticalInset),x1,y1:Math.ceil(row.bottom-verticalInset)},crop=preprocessNameCrop(imageData,box),result=await worker.recognize(crop);rawText=String(result.data.text||'').trim();confidence=Number(result.data.confidence)||0;try{cropUrl=crop.toDataURL('image/jpeg',.78)}catch{}}
     const text=cleanVoterName(rawText),suggestions=matchSuggestions(text);item.debugCrops.push(cropUrl);item.lines.push({id:uid(),text,rawText,confidence:Math.round(confidence),suggestions,residentId:'',state:suggestions.length?'pending':'unknown',reviewed:false,rowNumber:index+1,bbox:{x0,y0:row.top,x1,y1:row.bottom}});
    }
    item.rawText=`${item.lines.map((line,i)=>`Row ${String(i+1).padStart(2,'0')} · confidence ${line.confidence}: ${line.rawText||'[no text recognized]'}`).join('\n')}\n\nFULL IMAGE OCR\n${item.fullCropRawText}`;
    item.status='read';item.activeTab='extracted';renderBatchArea();
   }
   $('#batchStatus').textContent='OCR complete. Review every screenshot row before applying.';$('#batchModalStatus').textContent='Every detected row is retained, including low-confidence OCR. Confirm matches before applying.'}
- catch(e){$('#batchStatus').textContent='OCR could not start. Check your internet connection, then try again.';$('#batchModalStatus').textContent='OCR could not start. Check your internet connection, then try again.';batchItems.forEach(i=>{if(i.status==='reading')i.status='ready'})}
+ catch(e){console.error(`[Pink Plate OCR] Failed while ${ocrStage}:`,e);const message=`OCR failed while ${ocrStage}: ${e?.message||String(e)}. You can retry; no meal records were changed.`;$('#batchStatus').textContent=message;$('#batchModalStatus').textContent=message;batchItems.forEach(i=>{if(i.status==='reading')i.status='ready'})}
  finally{if(worker)await worker.terminate();$('#processPolls').disabled=!batchItems.length;updateApplyButton()}
 }
 function applyBatch(){

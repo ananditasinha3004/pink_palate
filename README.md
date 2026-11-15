@@ -36,7 +36,7 @@ Opening `index.html` directly may not work consistently because the app uses bro
 4. Mark unmatched voters as unknown or explicitly mark non-voter text. Unknown entries are retained for review and are not included in resident meal totals.
 5. If a record already exists for the same date and meal, select the replace option only if you intend to replace it.
 
-OCR uses Tesseract.js in the browser. The app fetches the OCR library and English language data from public CDNs, so the first OCR run needs an internet connection. Screenshot processing happens in the browser; screenshots are not uploaded to an OCR service. OCR can make mistakes, so review the result before applying it.
+OCR uses Tesseract.js in the browser. The OCR script, worker, WebAssembly core, and English language model are included in `vendor/tesseract`, so OCR works without a CDN or API key when the local server is running. Screenshot processing happens in the browser; screenshots are not uploaded to an OCR service. OCR can make mistakes, so review the result before applying it.
 
 ## Data and privacy
 
@@ -51,7 +51,7 @@ OCR uses Tesseract.js in the browser. The app fetches the OCR library and Englis
 - `styles.css` — Pink Plate styles and responsive layout
 - `app.js` — resident, meal, poll OCR, and finance workflows
 
-The standalone `eng.traineddata` file is not required by the current app; Tesseract downloads its language data when OCR starts.
+The OCR assets in `vendor/tesseract` are required for local OCR. Third-party license files are included alongside them. The separate root `eng.traineddata` file is unused and excluded from Git.
 
 ## Current limitations
 
