@@ -7,7 +7,7 @@ A local-first meal and accounts tracker for a hostel or shared mess. The manager
 - **Dashboard:** current-month meal units, today's meal counts, residents, collections, expenses, and the calculated meal rate.
 - **Residents:** add, edit, remove, or restore resident records. Registered names are kept in full; poll matching can use first names, aliases, initials, and spelling suggestions.
 - **Daily meals:** record breakfast, lunch, and dinner per resident. Counts support half-meal increments and manual corrections.
-- **WhatsApp poll review:** upload one or more screenshots, review detected voter rows, correct names, confirm suggested resident matches, or keep a voter unknown. Meal headings such as `Lunch:-` are detected automatically. Each screenshot's date and meal can be reviewed before applying it.
+- **WhatsApp poll review:** upload one or more screenshots, compare the uploaded image beside detected voter rows, correct names, confirm suggested resident matches, or keep a voter unknown. Meal headings such as `Lunch:-` are detected automatically. Each screenshot's date and meal can be reviewed before applying it.
 - **Monthly overview:** view residents by row and calendar days by column, with daily and monthly totals. Correct individual entries and export the view as CSV.
 - **Payments and expenses:** record resident payments and general mess expenses separately from meal entries, then view balances and print or save a monthly report as PDF.
 - **Local backup:** download a JSON backup containing residents, meal records, payments, and expenses.
