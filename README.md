@@ -26,7 +26,7 @@ This is a static browser app; no build step or backend is required.
 3. Open [http://localhost:8000](http://localhost:8000) in your browser.
 4. Stop the server with `Ctrl+C` when finished.
 
-Opening `index.html` directly may not work consistently because the app uses browser APIs that expect an HTTP origin.
+Open the app through `http://localhost:8000/`. Browser security blocks Tesseract workers on `file://` pages. If you previously saved records while opening `index.html` directly, refresh that file page and use **Download records** in its warning banner. Then open the local server URL and use **Residents → Import JSON backup**. Importing into a browser with existing records asks before replacing them.
 
 ## Using poll screenshots
 

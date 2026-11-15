@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#e90074">
   <title>Pink Plate — Mess tracker</title>
-  <link rel="stylesheet" href="styles.css?v=12">
+  <link rel="stylesheet" href="styles.css?v=13">
 </head>
 <body>
   <div class="app-shell">
@@ -23,6 +23,7 @@
     </aside>
     <main class="main">
       <header class="topbar"><div class="mobile-brand"><span class="brand-mark">P</span> pink plate</div><div class="month-picker"><label for="monthSelect">TRACKING MONTH</label><input id="monthSelect" type="month"></div></header>
+      <div id="fileModeNotice" class="callout file-mode-notice" hidden><strong>OCR needs the local server.</strong> This copy was opened as a file. Download your records here, then open <a href="http://localhost:8000/" target="_blank" rel="noopener">http://localhost:8000/</a> and import the backup from Residents. <button type="button" class="btn btn-secondary btn-small" id="fileModeBackup">Download records</button></div>
       <section id="page-dashboard" class="page active"></section>
       <section id="page-residents" class="page"></section>
       <section id="page-daily" class="page"></section>
@@ -72,6 +73,6 @@
       <div class="dialog-actions voter-dialog-actions"><button type="button" class="btn btn-secondary" id="addVoterAsResident">＋ Add as resident</button><button type="button" class="btn btn-secondary" id="cancelVoter">Cancel</button><button type="submit" class="btn btn-primary">Save review</button></div>
     </form>
   </dialog>
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>

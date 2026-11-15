@@ -66,8 +66,10 @@ function renderResidents(){
  <div class="stats"><div class="stat"><div class="stat-label">ACTIVE RESIDENTS</div><div class="stat-value">${list.length}</div><div class="stat-note">Registered for this month</div></div><div class="stat"><div class="stat-label">MEAL UNITS THIS MONTH</div><div class="stat-value">${monthMeals()}</div><div class="stat-note">Across all residents</div></div><div class="stat"><div class="stat-label">MEAL RATE</div><div class="stat-value">${cash(rate())}</div><div class="stat-note">Current month's expenses</div></div></div>
  <div class="card"><div class="card-head"><div><h2>Registered residents</h2><p>Full name is kept on the record; the first name is used as the primary poll match.</p></div><span class="pill">${list.length} ACTIVE</span></div><div class="card-body">${list.length?`<div class="resident-grid">${list.map(r=>`<div class="resident-card"><div class="avatar">${esc(initials(r.name))}</div><div class="resident-info"><div class="resident-name">${esc(r.name)}</div><div class="resident-meta">${residentMonth(r.id)} meal units · ${cash(residentMonth(r.id)*rate())} charge</div></div><div class="resident-controls"><button class="btn btn-secondary btn-small" data-edit-resident="${r.id}">Edit</button><button class="btn btn-secondary btn-small danger" data-delete-resident="${r.id}">Remove</button></div></div>`).join('')}</div>`:empty('A fresh start','Add residents to begin tracking meals.')}</div></div>
  ${store.residents.some(r=>r.active===false)?`<div class="card"><div class="card-head"><h2>Removed residents</h2><span class="pill pill-gray">HISTORY KEPT</span></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Month meals</th><th>Action</th></tr></thead><tbody>${store.residents.filter(r=>r.active===false).map(r=>`<tr><td>${esc(r.name)}</td><td>${residentMonth(r.id)}</td><td><button class="btn btn-secondary btn-small" data-restore-resident="${r.id}">Restore</button></td></tr>`).join('')}</tbody></table></div></div>`:''}
- <div class="callout">Removing a resident hides them from new records while keeping their earlier meal and payment history.</div>`;
+ <div class="callout">Removing a resident hides them from new records while keeping their earlier meal and payment history.</div>
+ <div class="card"><div class="card-head"><div><h2>Move records to this browser</h2><p>Import a Pink Plate backup saved from another browser page or device.</p></div></div><div class="card-body"><label class="btn btn-secondary btn-small" for="importBackupFile">Import JSON backup</label><input id="importBackupFile" type="file" accept="application/json,.json" hidden><p id="importBackupStatus" class="detail-line" role="status"></p></div></div>`;
  $('#addResident').onclick=()=>openResidentDialog();
+ $('#importBackupFile').onchange=async e=>{const file=e.target.files?.[0];if(file)await importBackup(file);e.target.value=''};
  $('#page-residents').querySelectorAll('[data-edit-resident]').forEach(b=>b.onclick=()=>openResidentDialog(store.residents.find(r=>r.id===b.dataset.editResident)));
  $('#page-residents').querySelectorAll('[data-delete-resident]').forEach(b=>b.onclick=()=>{const r=store.residents.find(x=>x.id===b.dataset.deleteResident);if(r){r.active=false;save();renderAll()}});
  $('#page-residents').querySelectorAll('[data-restore-resident]').forEach(b=>b.onclick=()=>{const r=store.residents.find(x=>x.id===b.dataset.restoreResident);if(r){r.active=true;save();renderAll()}});
@@ -268,6 +270,7 @@ async function loadPollImage(file){
 }
 async function processBatch(){
  if(!batchItems.length)return;$('#batchStatus').textContent='Loading OCR engine…';$('#processPolls').disabled=true;
+ if(location.protocol==='file:'){const message='OCR cannot run from a file page. Download your records, then open http://localhost:8000/ and import the backup from Residents.';$('#batchStatus').textContent=message;$('#batchModalStatus').textContent=message;$('#processPolls').disabled=false;return}
  let worker,ocrStage='loading the OCR engine';
  try{if(!$('#batchDialog').open)$('#batchDialog').showModal();await ensureOcr();const ocrBase=new URL('vendor/tesseract/',document.baseURI).href.replace(/\/$/,'');ocrStage='starting the OCR worker';worker=await Tesseract.createWorker('eng',1,{workerPath:`${ocrBase}/worker.min.js`,corePath:`${ocrBase}/core`,langPath:`${ocrBase}/lang`,gzip:false,workerBlobURL:false,logger:m=>{if(m.status==='recognizing text'){const status=`Reading ${m.progress?Math.round(m.progress*100):0}%`;$('#batchStatus').textContent=status;$('#batchModalStatus').textContent=status}}});
   for(const item of batchItems){if(item.status==='read')continue;item.status='reading';renderBatchArea();
@@ -328,6 +331,12 @@ function renderFinance(){
  $('#backupData').onclick=exportBackup;$('#printReport').onclick=()=>window.print();
 }
 function exportBackup(){const blob=new Blob([JSON.stringify({format:'pink-plate-backup-v2',exportedAt:new Date().toISOString(),...store},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`pink-plate-backup-${selectedMonth}.json`;a.click();URL.revokeObjectURL(url)}
+async function importBackup(file){
+ const status=$('#importBackupStatus');try{const data=JSON.parse(await file.text());if(data?.format!=='pink-plate-backup-v2'||!Array.isArray(data.residents)||!data.meals||typeof data.meals!=='object'||Array.isArray(data.meals)||!Array.isArray(data.payments)||!Array.isArray(data.expenses))throw Error('Choose a Pink Plate JSON backup.');
+  if(store.residents.length||Object.keys(store.meals).length||store.payments.length||store.expenses.length){if(!window.confirm('Replace the records in this browser with the selected backup? Download a copy of current records first if needed.'))return}
+  store={...freshStore(),residents:data.residents,meals:data.meals,payments:data.payments,expenses:data.expenses,months:data.months&&typeof data.months==='object'?data.months:{},migrationV2:true};localStorage.setItem(STORAGE_KEY,JSON.stringify(store));renderAll();$('#importBackupStatus').textContent='Backup imported. Your records are available in this browser.';
+ }catch(error){status.textContent=`Import failed: ${error?.message||String(error)}`}
+}
 function exportMonthlyCsv(){
  const days=dayKeys(),rows=[['Resident',...days.map(d=>dateLabel(d,{day:'numeric'})),'Monthly total']];
  for(const r of peopleForHistory())rows.push([r.name,...days.map(d=>residentDaily(r.id,d)),residentMonth(r.id)]);
@@ -343,4 +352,5 @@ function renderAll(){
 document.querySelectorAll('.nav-link').forEach(b=>b.onclick=()=>setPage(b.dataset.page));
 $('#monthSelect').onchange=e=>{selectedMonth=e.target.value||asMonth(new Date());selectedDate=`${selectedMonth}-01`;renderAll()};
 document.querySelector('[data-close-batch]').onclick=()=>$('#batchDialog').close();
+$('#fileModeNotice').hidden=location.protocol!=='file:';$('#fileModeBackup').onclick=exportBackup;
 bindResidentDialog();bindVoterDialog();bindCropDialog();renderAll();
