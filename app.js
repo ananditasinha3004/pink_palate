@@ -156,6 +156,9 @@ function cleanVoterName(raw){
  while(/^(?:[\p{L}\d])\s+(?=\p{L})/u.test(text))text=text.replace(/^(?:[\p{L}\d])\s+(?=\p{L})/u,'').trim();
  return text.replace(/^[^\p{L}\p{N}+]+|[^\p{L}\p{N}]+$/gu,'').replace(/\s+/g,' ').trim();
 }
+function withoutVoteTime(raw){
+ return String(raw||'').replace(/\s*\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}(?:\s+\d{1,2}:\d{2}\s*[AP]M)?\s*$/i,'').replace(/\s+\b\d{1,2}:\d{2}\s*[AP]M\s*$/i,'').trim();
+}
 function grayAt(data,x,y){const i=(y*data.width+x)*4;return .299*data.data[i]+.587*data.data[i+1]+.114*data.data[i+2]}
 function median(values){if(!values.length)return 0;const a=[...values].sort((x,y)=>x-y);return a[Math.floor(a.length/2)]}
 function inferMealFromHeading(rawText){
@@ -246,18 +249,18 @@ async function processBatch(){
  try{if(!$('#batchDialog').open)$('#batchDialog').showModal();await ensureOcr();const ocrBase=new URL('vendor/tesseract/',document.baseURI).href.replace(/\/$/,'');ocrStage='starting the OCR worker';worker=await Tesseract.createWorker('eng',1,{workerPath:`${ocrBase}/worker.min.js`,corePath:`${ocrBase}/core`,langPath:`${ocrBase}/lang`,gzip:false,workerBlobURL:false,logger:m=>{if(m.status==='recognizing text'){const status=`Reading ${m.progress?Math.round(m.progress*100):0}%`;$('#batchStatus').textContent=status;$('#batchModalStatus').textContent=status}}});
   for(const item of batchItems){if(item.status==='read')continue;item.status='reading';renderBatchArea();
    ocrStage=`reading ${item.fileName}`;await worker.setParameters({tessedit_pageseg_mode:'3'});const full=await worker.recognize(item.file);item.fullCropRawText=full.data.text||'';
-   const {canvas,imageData}=await loadPollImage(item.file),detected=detectVoteRows(imageData),x1=Math.min(canvas.width,Math.floor(canvas.width*.74));item.voterRegion=detected.region;item.debugCrops=[];item.lines=[];
+   const {canvas,imageData}=await loadPollImage(item.file),detected=detectVoteRows(imageData),x1=Math.min(canvas.width,Math.floor(canvas.width*.66));item.voterRegion=detected.region;item.debugCrops=[];item.lines=[];
    const inferredMeal=inferMealFromHeading(item.fullCropRawText);item.mealHeading=inferredMeal.heading;
    if(inferredMeal.meal)item.meal=inferredMeal.meal;
    else console.warn('[Pink Plate OCR] Could not infer meal from poll heading; tested heading:',inferredMeal.heading);
    let rowSpecs=detected.rows;
-   if(!rowSpecs.length){const fallback=(full.data.text||'').split(/\r?\n/).map(text=>text.trim()).filter(Boolean);rowSpecs=fallback.map((text,i)=>({top:Math.floor(canvas.height*i/fallback.length),bottom:Math.floor(canvas.height*(i+1)/fallback.length),height:Math.max(1,Math.floor(canvas.height/fallback.length)),fallbackText:text}))}
+   if(!rowSpecs.length){const fallback=(full.data.text||'').split(/\r?\n/).map(text=>withoutVoteTime(text)).filter(text=>text&&text!==inferredMeal.heading&&!/\b\d+\s+votes?\s*$/i.test(text));rowSpecs=fallback.map((text,i)=>({top:Math.floor(canvas.height*i/fallback.length),bottom:Math.floor(canvas.height*(i+1)/fallback.length),height:Math.max(1,Math.floor(canvas.height/fallback.length)),fallbackText:text}))}
    await worker.setParameters({tessedit_pageseg_mode:'7'});
    for(let index=0;index<rowSpecs.length;index++){
     const row=rowSpecs[index],leftPadding=Math.max(8,Math.round(row.height*.1)),x0=Math.max(0,Math.floor(canvas.width*.1)-leftPadding);let rawText='',confidence=0,cropUrl='';
     if(row.fallbackText){rawText=row.fallbackText;confidence=0}
     else{const verticalInset=Math.round(row.height*.12),box={x0,y0:Math.floor(row.top+verticalInset),x1,y1:Math.ceil(row.bottom-verticalInset)},crop=preprocessNameCrop(imageData,box),result=await worker.recognize(crop);rawText=String(result.data.text||'').trim();confidence=Number(result.data.confidence)||0;try{cropUrl=crop.toDataURL('image/jpeg',.78)}catch{}}
-    const text=cleanVoterName(rawText),suggestions=matchSuggestions(text),resident=confidentResidentMatch(text,confidence);item.debugCrops.push(cropUrl);item.lines.push({id:uid(),text,rawText,confidence:Math.round(confidence),suggestions,residentId:resident?.id||'',state:resident?'matched':suggestions.length?'pending':'unknown',reviewed:!!resident,rowNumber:index+1,bbox:{x0,y0:row.top,x1,y1:row.bottom}});
+    const text=cleanVoterName(withoutVoteTime(rawText)),suggestions=matchSuggestions(text),resident=confidentResidentMatch(text,confidence),metadataOnly=!text&&!!rawText;item.debugCrops.push(cropUrl);item.lines.push({id:uid(),text,rawText,confidence:Math.round(confidence),suggestions,residentId:resident?.id||'',state:metadataOnly?'ignored':resident?'matched':suggestions.length?'pending':'unknown',reviewed:metadataOnly||!!resident,rowNumber:index+1,bbox:{x0,y0:row.top,x1,y1:row.bottom}});
    }
    item.rawText=`${item.lines.map((line,i)=>`Row ${String(i+1).padStart(2,'0')} · confidence ${line.confidence}: ${line.rawText||'[no text recognized]'}`).join('\n')}\n\nFULL IMAGE OCR\n${item.fullCropRawText}`;
    item.status='read';item.activeTab=item.lines.some(line=>!line.reviewed)?'unknown':'extracted';renderBatchArea();
