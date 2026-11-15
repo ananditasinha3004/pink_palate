@@ -7,7 +7,7 @@ A local-first meal and accounts tracker for a hostel or shared mess. The manager
 - **Dashboard:** current-month meal units, today's meal counts, residents, collections, expenses, and the calculated meal rate.
 - **Residents:** add, edit, remove, or restore resident records. Registered names are kept in full; poll matching can use first names, aliases, initials, and spelling suggestions.
 - **Daily meals:** record breakfast, lunch, and dinner per resident. Counts support half-meal increments and manual corrections.
-- **WhatsApp poll review:** upload one or more screenshots, compare the uploaded image beside detected voter rows, correct names, confirm suggested resident matches, or keep a voter unknown. Meal headings such as `Lunch:-` are detected automatically. Each screenshot's date and meal can be reviewed before applying it.
+- **WhatsApp poll review:** upload one or more screenshots, compare the uploaded image beside detected voter rows, correct names, let clear unique matches to registered residents count automatically, or review a new or uncertain voter. Meal headings such as `Lunch:-` are detected automatically. Each screenshot's date and meal can be reviewed before applying it.
 - **Monthly overview:** view residents by row and calendar days by column, with daily and monthly totals. Correct individual entries and export the view as CSV.
 - **Payments and expenses:** record resident payments and general mess expenses separately from meal entries, then view balances and print or save a monthly report as PDF.
 - **Local backup:** download a JSON backup containing residents, meal records, payments, and expenses.
@@ -32,7 +32,7 @@ Opening `index.html` directly may not work consistently because the app uses bro
 
 1. Open **Daily meals** and choose the poll screenshot file or drag it into the upload area.
 2. Set or confirm the date and meal for each screenshot.
-3. Start OCR, then review every extracted row. Correct uncertain text and confirm any resident match before applying.
+3. Start OCR. Clear, unique matches to registered residents are counted automatically; review only new, ambiguous, or low-confidence names before applying.
 4. Mark unmatched voters as unknown or explicitly mark non-voter text. Unknown entries are retained for review and are not included in resident meal totals.
 5. If a record already exists for the same date and meal, select the replace option only if you intend to replace it.
 
